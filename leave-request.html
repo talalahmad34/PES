@@ -1,0 +1,153 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-calendar-alt me-2"></i>Leave Requests</h2>
+            <button type="button" class="btn btn-primary" onclick="showCreateLeaveRequestModal()">
+                <i class="fas fa-plus me-2"></i>New Leave Request
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="leaveStatusFilter">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="completed">Completed</option>
+            <option value="declined">Declined</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="leaveTypeFilter">
+            <option value="">All Types</option>
+            <option value="annual">Annual Leave</option>
+            <option value="sick">Sick Leave</option>
+            <option value="casual">Casual Leave</option>
+            <option value="emergency">Emergency Leave</option>
+            <option value="maternity">Maternity Leave</option>
+            <option value="paternity">Paternity Leave</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="month" class="form-control" id="leaveMonthFilter" placeholder="Filter by month">
+    </div>
+    <div class="col-md-3">
+        <button type="button" class="btn btn-outline-secondary w-100" onclick="refreshLeaveRequests()">
+            <i class="fas fa-refresh me-2"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Leave Requests List -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list me-2"></i>Leave Requests</h5>
+    </div>
+    <div class="card-body">
+        <div id="leaveRequestsContainer">
+            <div class="text-center text-muted">
+                <i class="fas fa-spinner fa-spin me-2"></i>Loading leave requests...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Leave Request Modal -->
+<div class="modal fade" id="leaveRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-alt me-2"></i>New Leave Request
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="leaveRequestForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="leaveSubject" class="form-label">Subject *</label>
+                            <input type="text" class="form-control" id="leaveSubject" name="subject" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="leaveType" class="form-label">Leave Type *</label>
+                            <select class="form-select" id="leaveType" name="leave_type" required>
+                                <option value="">Select Type</option>
+                                <option value="annual">Annual Leave</option>
+                                <option value="sick">Sick Leave</option>
+                                <option value="casual">Casual Leave</option>
+                                <option value="emergency">Emergency Leave</option>
+                                <option value="maternity">Maternity Leave</option>
+                                <option value="paternity">Paternity Leave</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="leaveStartDate" class="form-label">Start Date *</label>
+                            <input type="date" class="form-control" id="leaveStartDate" name="start_date" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="leaveEndDate" class="form-label">End Date *</label>
+                            <input type="date" class="form-control" id="leaveEndDate" name="end_date" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="leaveTotalDays" class="form-label">Total Days</label>
+                            <input type="number" class="form-control" id="leaveTotalDays" name="total_days" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="leaveReplacement" class="form-label">Replacement Person *</label>
+                        <div class="position-relative">
+                            <input type="text" class="form-control" id="leaveReplacement" name="replacement_name" 
+                                   placeholder="Start typing to search for replacement..." required autocomplete="off">
+                            <input type="hidden" id="leaveReplacementUserId" name="replacement_user_id">
+                            <div id="replacementSuggestions" class="dropdown-menu w-100" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                        <div class="form-text">Select a colleague who will handle your responsibilities during your absence.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="leaveDescription" class="form-label">Reason / Description</label>
+                        <textarea class="form-control" id="leaveDescription" name="description" rows="3"
+                                placeholder="Please provide reason for leave request..."></textarea>
+                    </div>
+
+                    <!-- Alert container -->
+                    <div id="leaveRequestAlertContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveLeaveRequestBtn">
+                        <i class="fas fa-save me-2"></i>Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Request Details Modal -->
+<div class="modal fade" id="leaveDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveDetailsTitle">
+                    <i class="fas fa-info-circle me-2"></i>Leave Request Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="leaveDetailsContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer" id="leaveDetailsActions">
+                <!-- Actions loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
